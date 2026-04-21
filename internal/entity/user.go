@@ -12,7 +12,7 @@ const (
 type User struct {
 	ID           string    `json:"id"`
 	Username     string    `json:"username"`
-	PasswordHash string    `json:"-"`
+	PasswordHash string    `json:"password_hash"`
 	Role         UserRole  `json:"role"`
 	CreatedAt    time.Time `json:"created_at"`
 }
