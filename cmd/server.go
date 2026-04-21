@@ -6,12 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"salaryAdvance/internal/entity"
 	"salaryAdvance/internal/infrastructure"
 	"salaryAdvance/internal/interfaces/dto"
 	handler "salaryAdvance/internal/interfaces/http"
+	"salaryAdvance/internal/interfaces/router"
 	"salaryAdvance/internal/repository"
 	"salaryAdvance/internal/services"
 )
@@ -26,7 +25,6 @@ func main() {
 			log.Printf("failed closing postgres store: %v", closeErr)
 		}
 	}()
-
 
 	repo := repository.NewPostgresRepository(store.DB)
 
@@ -55,25 +53,7 @@ func main() {
 	validationHandler := &handler.ValidationHandler{ValidationService: validationSvc}
 	ratingHandler := &handler.CustomerRatingHandler{ValidationService: validationSvc}
 
-	r := gin.Default()
-
-	authGroup := r.Group("/auth")
-	{
-		authGroup.POST("/register", authHandler.Register)
-		authGroup.POST("/login", authHandler.Login)
-		authGroup.POST("/register-admin", handler.AuthRequired(authSvc), handler.RequireRole(entity.Admin), authHandler.RegisterAdmin)
-		authGroup.POST("/logout", handler.AuthRequired(authSvc), authHandler.Logout)
-	}
-
-	secured := r.Group("/api", handler.AuthRequired(authSvc))
-	{
-		secured.POST("/validate", validationHandler.DataValidationHandler)
-		secured.POST("/process", validationHandler.DataValidationHandler)
-		secured.GET("/verified-customers", validationHandler.GetVerifiedCustomersHandler)
-
-		adminOnly := secured.Group("", handler.RequireRole(entity.Admin))
-		adminOnly.GET("/customer-ratings", ratingHandler.CustomerRatingHandler)
-	}
+	r := router.NewRouter(authSvc, authHandler, validationHandler, ratingHandler)
 
 	port := getenv("PORT", "8080")
 	if err := r.Run(":" + port); err != nil {

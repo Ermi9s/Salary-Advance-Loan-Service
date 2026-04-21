@@ -5,14 +5,12 @@ import (
 	"net/http"
 	"salaryAdvance/internal/entity"
 	"salaryAdvance/internal/services"
-
 	"github.com/gin-gonic/gin"
 )
 
 type AuthHandlers struct {
 	AuthService *services.AuthService
 }
-
 
 
 func (h *AuthHandlers) Register(c *gin.Context) {
@@ -35,7 +33,6 @@ func (h *AuthHandlers) Register(c *gin.Context) {
 	}
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
-
 
 
 func (h *AuthHandlers) RegisterAdmin(c *gin.Context) {
