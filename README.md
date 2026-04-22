@@ -8,7 +8,7 @@ Backend service for salary advance loan challenge implemented in Go.
 - Role-based access control: `admin`, `uploader`
 - Login rate limiting (failed-attempt window)
 - Customer data validation with detailed batch logs
-- Verified customer persistence in in-memory repository
+- Verified customer persistence in PostgreSQL
 - Transaction mapping, synthetic transaction generation, and customer rating (1-10)
 - Unit tests for authentication, validation logic, and rating calculation
 
@@ -18,7 +18,7 @@ Backend service for salary advance loan challenge implemented in Go.
 - `internal/interfaces/http`: handlers and auth middleware
 - `internal/interfaces/dto`: file readers for customer/transaction/sample data
 - `internal/services`: auth, validation, and rating business logic
-- `internal/repository`: in-memory repository implementation
+- `internal/repository`: PostgreSQL repository implementation
 - `data`: input files
 
 ## Security Measures

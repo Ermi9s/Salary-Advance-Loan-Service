@@ -6,10 +6,13 @@ import (
 
 	"salaryAdvance/internal/entity"
 	"salaryAdvance/internal/repository"
+	"salaryAdvance/internal/testutil"
 )
 
 func TestAuthRegisterAndLogin(t *testing.T) {
-	repo := repository.NewInMemoryRepository()
+	store := testutil.OpenTestPostgresStore(t)
+	testutil.TruncateTables(t, store.DB)
+	repo := repository.NewPostgresRepository(store.DB)
 	svc := NewAuthService(repo, AuthServiceConfig{
 		JWTSecret:           "test-secret",
 		AccessTokenTTL:      time.Hour,
@@ -36,7 +39,9 @@ func TestAuthRegisterAndLogin(t *testing.T) {
 }
 
 func TestLoginRateLimit(t *testing.T) {
-	repo := repository.NewInMemoryRepository()
+	store := testutil.OpenTestPostgresStore(t)
+	testutil.TruncateTables(t, store.DB)
+	repo := repository.NewPostgresRepository(store.DB)
 	svc := NewAuthService(repo, AuthServiceConfig{
 		JWTSecret:           "test-secret",
 		AccessTokenTTL:      time.Hour,

@@ -3,14 +3,10 @@ package dto
 import (
 	"encoding/csv"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"path/filepath"
 	"salaryAdvance/internal/entity"
-	"strconv"
-	"strings"
 )
 
 type DTOMethodes struct {
@@ -55,40 +51,7 @@ func (d *DTOMethodes) ReadTransactionData() ([]entity.Transaction, error) {
 }
 
 func (d *DTOMethodes) ReadSampleData() ([]entity.InputCustomer, error) {
-	ext := strings.ToLower(filepath.Ext(d.SampleCustomerFilePath))
-	if ext == ".json" {
-		return d.readSampleJSON()
-	}
 	return d.ReadCSV()
-}
-
-func (d *DTOMethodes) readSampleJSON() ([]entity.InputCustomer, error) {
-	var rawRecords []map[string]any
-	if err := readJSONFile(d.SampleCustomerFilePath, &rawRecords); err != nil {
-		return nil, err
-	}
-
-	customers := make([]entity.InputCustomer, 0, len(rawRecords))
-	for _, raw := range rawRecords {
-		name := strings.TrimSpace(fmt.Sprintf("%v", raw["name"]))
-
-		var account string
-		switch v := raw["account_number"].(type) {
-		case string:
-			account = strings.TrimSpace(v)
-		case float64:
-			account = strconv.FormatInt(int64(v), 10)
-		default:
-			account = strings.TrimSpace(fmt.Sprintf("%v", v))
-		}
-
-		customers = append(customers, entity.InputCustomer{
-			CustomerName: name,
-			AccountNo:    account,
-		})
-	}
-
-	return customers, nil
 }
 
 func (d *DTOMethodes) ReadCSV() ([]entity.InputCustomer, error) {
