@@ -29,7 +29,7 @@ func NewRouter(
 
 	secured := r.engine.Group("/api", handler.AuthRequired(authService))
 	{
-		secured.POST("/validate", validationHandler.DataValidationHandler)
+		secured.GET("/validate", validationHandler.DataValidationHandler)
 		secured.GET("/verified-customers", validationHandler.GetVerifiedCustomersHandler)
 
 		adminOnly := secured.Group("", handler.RequireRole(entity.Admin))

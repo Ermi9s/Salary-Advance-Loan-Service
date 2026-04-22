@@ -8,6 +8,7 @@ import (
 
 func calculateBreakdown(customer entity.BankCustomer, tx []entity.EnrichedTransaction) entity.RatingBreakdown {
 	countScore := clamp(float64(len(tx))/25*10, 0, 10)
+
 	volume := totalVolume(tx)
 	volumeScore := clamp(volume/max(customer.CustomerBalance, 1)*5, 0, 10)
 
@@ -18,14 +19,15 @@ func calculateBreakdown(customer entity.BankCustomer, tx []entity.EnrichedTransa
 	}
 
 	stabilityScore := stabilityFromTransactions(customer.CustomerBalance, tx)
+
 	weighted := 0.25*countScore + 0.30*volumeScore + 0.20*durationScore + 0.25*stabilityScore
 
 	return entity.RatingBreakdown{
-		CountScore:     countScore,
-		VolumeScore:    volumeScore,
-		DurationScore:  durationScore,
-		StabilityScore: stabilityScore,
-		WeightedTotal:  weighted,
+		CountScore:     round2(countScore),
+		VolumeScore:    round2(volumeScore),
+		DurationScore:  round2(durationScore),
+		StabilityScore: round2(stabilityScore),
+		WeightedTotal:  round2(weighted),
 	}
 }
 
@@ -33,9 +35,11 @@ func stabilityFromTransactions(startBalance float64, tx []entity.EnrichedTransac
 	if len(tx) == 0 {
 		return 0
 	}
+
 	balances := make([]float64, 0, len(tx)+1)
 	current := startBalance
 	balances = append(balances, current)
+
 	for _, item := range tx {
 		if item.Direction == "debit" {
 			current -= item.Amount
@@ -63,8 +67,10 @@ func stabilityFromTransactions(startBalance float64, tx []entity.EnrichedTransac
 		variance += delta * delta
 	}
 	variance /= float64(len(balances))
+
 	std := math.Sqrt(variance)
 	cv := std / mean
+
 	return clamp(10-(cv*10), 0, 10)
 }
 
@@ -73,7 +79,7 @@ func totalVolume(tx []entity.EnrichedTransaction) float64 {
 	for _, item := range tx {
 		total += item.Amount
 	}
-	return total
+	return round2(total)
 }
 
 func clamp(v, minV, maxV float64) float64 {
@@ -97,4 +103,8 @@ func seededFloat(account string) float64 {
 	h := fnv.New32a()
 	_, _ = h.Write([]byte(account))
 	return float64(h.Sum32()%1000) / 1000
+}
+
+func round2(v float64) float64 {
+	return math.Round(v*100) / 100
 }
