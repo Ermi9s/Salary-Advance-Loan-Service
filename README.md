@@ -74,7 +74,7 @@ docker compose up --build
 - `POST /auth/login` (public): returns JWT token
 - `POST /auth/register-admin` (admin only): create admin
 - `POST /auth/logout` (authenticated): invalidate token
-- `POST /api/validate` (authenticated): run customer sample validation and persist verified customers
+- `GET /api/validate` (authenticated): run customer sample validation and persist verified customers
 - `GET /api/verified-customers` (authenticated): list verified customers
 - `GET /api/customer-ratings` (admin only): calculate and return customer ratings
 

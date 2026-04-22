@@ -15,7 +15,7 @@ func calculateBreakdown(customer entity.BankCustomer, tx []entity.EnrichedTransa
 	durationScore := 0.0
 	if len(tx) > 1 {
 		days := tx[len(tx)-1].TransactionDate.Sub(tx[0].TransactionDate).Hours() / 24
-		durationScore = clamp(days/365*10, 0, 10)
+		durationScore = clamp(days/30*10, 0, 10)
 	}
 
 	stabilityScore := stabilityFromTransactions(customer.CustomerBalance, tx)
