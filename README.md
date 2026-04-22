@@ -37,7 +37,7 @@ Backend service for salary advance loan challenge implemented in Go.
 
 ```bash
 export PORT=8080
-export JWT_SECRET='replace-with-secure-random-secret'
+export JWT_SECRET='secret'
 export ADMIN_USERNAME='admin'
 export ADMIN_PASSWORD='Admin@1234'
 export CUSTOMERS_FILE='data/customers.json'
