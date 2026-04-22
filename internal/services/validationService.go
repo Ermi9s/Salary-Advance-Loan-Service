@@ -9,11 +9,6 @@ import (
 	"salaryAdvance/internal/interfaces/dto"
 )
 
-type ValidationRepository interface {
-	SaveVerifiedCustomers(ctx context.Context, customers []entity.BankCustomer) error
-	ListVerifiedCustomers(ctx context.Context) ([]entity.BankCustomer, error)
-}
-
 type ValidationService struct {
 	Repository    ValidationRepository
 	DTOMethodes   *dto.DTOMethodes
@@ -48,7 +43,6 @@ func (s *ValidationService) ValidateData(ctx context.Context) (entity.Validation
 	return report, nil
 }
 
-
 func (s *ValidationService) CalculateCustomerRatings(ctx context.Context) ([]entity.CustomerRating, error) {
 	_ = ctx
 
@@ -68,7 +62,6 @@ func (s *ValidationService) CalculateCustomerRatings(ctx context.Context) ([]ent
 
 	return s.RatingService.RateCustomers(customerList, transactionData)
 }
-
 
 func (s *ValidationService) GetVerifiedCustomers(ctx context.Context) ([]entity.BankCustomer, error) {
 	return s.Repository.ListVerifiedCustomers(ctx)
