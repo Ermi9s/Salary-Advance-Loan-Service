@@ -10,15 +10,18 @@ Backend service for salary advance loan challenge implemented in Go.
 - Customer data validation with detailed batch logs
 - Verified customer persistence in PostgreSQL
 - Transaction mapping, synthetic transaction generation, and customer rating (1-10)
-- Unit tests for authentication, validation logic, and rating calculation
+- Idempotent admin seeding on startup
+- Unit and integration-style tests for auth, handlers, repositories, and services
 
 ## Project Structure
 
 - `cmd/server.go`: app entrypoint and route wiring
+- `cmd/utils.go`: environment/config helpers, database bootstrap, admin seed logic
 - `internal/interfaces/http`: handlers and auth middleware
 - `internal/interfaces/dto`: file readers for customer/transaction/sample data
 - `internal/services`: auth, validation, and rating business logic
 - `internal/repository`: PostgreSQL repository implementation
+- `internal/testutil`: shared PostgreSQL test helpers
 - `data`: input files
 
 ## Security Measures
@@ -43,13 +46,15 @@ export ADMIN_PASSWORD='Admin@1234'
 export POSTGRES_DB='loan_service'
 export POSTGRES_USER='loan_user'
 export POSTGRES_PASSWORD='12345678'
-export DB_HOST='postgres'
+export DB_HOST='localhost'
 export DB_PORT='5432'
 export DB_SSLMODE='disable'
 export CUSTOMERS_FILE='data/customers.json'
 export TRANSACTIONS_FILE='data/transactions.json'
 export SAMPLE_FILE='data/sample_customers.csv'
 ```
+
+Note: when running inside Docker Compose, `DB_HOST` should be `postgres`.
 
 2. Start service:
 
@@ -69,7 +74,9 @@ docker compose up --build
 - `POST /auth/login` (public): returns JWT token
 - `POST /auth/register-admin` (admin only): create admin
 - `POST /auth/logout` (authenticated): invalidate token
-- `POST /api/process` (authenticated): run validation + rating workflow
+- `POST /api/validate` (authenticated): run customer sample validation and persist verified customers
+- `GET /api/verified-customers` (authenticated): list verified customers
+- `GET /api/customer-ratings` (admin only): calculate and return customer ratings
 
 Use `Authorization: Bearer <token>` for protected endpoints.
 
@@ -123,6 +130,7 @@ go test ./...
 
 Test coverage areas:
 
-- authentication (register/login/token/rate-limit)
-- validation logic (detects two faulty records)
-- rating calculation (bounded score and breakdown)
+- authentication and middleware behavior
+- DTO parsing paths (CSV sample ingestion)
+- repository behavior (PostgreSQL)
+- validation and rating service behavior

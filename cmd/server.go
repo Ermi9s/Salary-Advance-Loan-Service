@@ -2,17 +2,22 @@ package main
 
 import (
 	"log"
-	"time"
 	"salaryAdvance/internal/interfaces/dto"
 	handler "salaryAdvance/internal/interfaces/http"
 	"salaryAdvance/internal/interfaces/router"
 	"salaryAdvance/internal/repository"
 	"salaryAdvance/internal/services"
+	"time"
 )
-
 
 func main() {
 	store := initializeDatabase()
+	defer func() {
+		if closeErr := store.Close(); closeErr != nil {
+			log.Printf("failed closing postgres store: %v", closeErr)
+		}
+	}()
+
 	repo := repository.NewPostgresRepository(store.DB)
 	authSvc := services.NewAuthService(repo, services.AuthServiceConfig{
 		JWTSecret:           getenv("JWT_SECRET", "change-this-in-production"),
@@ -20,7 +25,7 @@ func main() {
 		MaxLoginAttempts:    5,
 		LoginWindowDuration: 15 * time.Minute,
 	})
-	
+
 	dtoMethods := &dto.DTOMethodes{
 		CustomersFilePath:      getenv("CUSTOMERS_FILE", "data/customers.json"),
 		TransactionFilePath:    getenv("TRANSACTIONS_FILE", "data/transactions.json"),
@@ -31,7 +36,7 @@ func main() {
 		DTOMethodes:   dtoMethods,
 		RatingService: &services.RatingService{AllowOverdraft: false},
 	}
-	
+
 	seedAdmin(authSvc)
 
 	authHandler := &handler.AuthHandlers{AuthService: authSvc}
@@ -45,4 +50,3 @@ func main() {
 		log.Fatalf("server failed: %v", err)
 	}
 }
-

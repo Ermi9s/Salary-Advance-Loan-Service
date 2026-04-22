@@ -66,16 +66,10 @@ func getenv(key string, fallback string) string {
 	return v
 }
 
-func initializeDatabase () *infrastructure.PostgresStore {
+func initializeDatabase() *infrastructure.PostgresStore {
 	store, err := infrastructure.NewPostgresStore(buildPostgresDSN())
 	if err != nil {
 		log.Fatalf("failed to initialize postgres store: %v", err)
 	}
-	defer func() {
-		if closeErr := store.Close(); closeErr != nil {
-			log.Printf("failed closing postgres store: %v", closeErr)
-		}
-	}()
-
 	return store
 }
