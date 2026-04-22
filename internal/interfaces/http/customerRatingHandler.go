@@ -4,12 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-
-	"salaryAdvance/internal/services"
 )
 
 type CustomerRatingHandler struct {
-	ValidationService *services.ValidationService
+	ValidationService CustomerRatingService
 }
 
 func (h *CustomerRatingHandler) CustomerRatingHandler(c *gin.Context) {

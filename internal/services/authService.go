@@ -12,7 +12,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"salaryAdvance/internal/entity"
-	"salaryAdvance/internal/repository"
 )
 
 type AuthServiceConfig struct {
@@ -28,7 +27,7 @@ type loginAttempt struct {
 }
 
 type AuthService struct {
-	UserRepo repository.UserRepository
+	UserRepo AuthRepository
 	Config   AuthServiceConfig
 
 	attemptMu sync.Mutex
@@ -38,21 +37,15 @@ type AuthService struct {
 	denylist   map[string]time.Time
 }
 
-
-
 func (s *AuthService) Register(user entity.User) error {
 	user.Role = entity.Uploader
 	return s.createUser(user)
 }
 
-
-
 func (s *AuthService) RegisterAdmin(user entity.User) error {
 	user.Role = entity.Admin
 	return s.createUser(user)
 }
-
-
 
 func (s *AuthService) Login(username, password string, sourceKey string) (string, error) {
 	normalizedUsername := strings.TrimSpace(strings.ToLower(username))
@@ -79,8 +72,6 @@ func (s *AuthService) Login(username, password string, sourceKey string) (string
 	return s.generateToken(user)
 }
 
-
-
 func (s *AuthService) Logout(token string) error {
 	claims, err := s.ValidateToken(token)
 	if err != nil {
@@ -93,9 +84,7 @@ func (s *AuthService) Logout(token string) error {
 	return nil
 }
 
-
-
-func NewAuthService(repo repository.UserRepository, cfg AuthServiceConfig) *AuthService {
+func NewAuthService(repo AuthRepository, cfg AuthServiceConfig) *AuthService {
 	if cfg.MaxLoginAttempts <= 0 {
 		cfg.MaxLoginAttempts = 5
 	}
@@ -113,8 +102,6 @@ func NewAuthService(repo repository.UserRepository, cfg AuthServiceConfig) *Auth
 		denylist: make(map[string]time.Time),
 	}
 }
-
-
 
 func (s *AuthService) ValidateToken(tokenString string) (*jwt.RegisteredClaims, error) {
 	if tokenString == "" {
@@ -146,8 +133,6 @@ func (s *AuthService) ValidateToken(tokenString string) (*jwt.RegisteredClaims, 
 	return claims, nil
 }
 
-
-
 func (s *AuthService) ParseRole(tokenString string) (entity.UserRole, error) {
 	parsedToken, err := jwt.ParseWithClaims(tokenString, jwt.MapClaims{}, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -172,8 +157,6 @@ func (s *AuthService) ParseRole(tokenString string) (entity.UserRole, error) {
 	return entity.UserRole(rawRole), nil
 }
 
-
-
 func (s *AuthService) createUser(user entity.User) error {
 	normalizedUsername := strings.TrimSpace(strings.ToLower(user.Username))
 	if normalizedUsername == "" {
@@ -190,7 +173,6 @@ func (s *AuthService) createUser(user entity.User) error {
 	return s.UserRepo.CreateUser(context.Background(), user)
 }
 
-
 func (s *AuthService) generateToken(user entity.User) (string, error) {
 	now := time.Now().UTC()
 	claims := jwt.MapClaims{
@@ -204,8 +186,6 @@ func (s *AuthService) generateToken(user entity.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.Config.JWTSecret))
 }
-
-
 
 func (s *AuthService) isRateLimited(sourceKey string) bool {
 	s.attemptMu.Lock()
@@ -225,8 +205,6 @@ func (s *AuthService) isRateLimited(sourceKey string) bool {
 	return attempt.Count >= s.Config.MaxLoginAttempts
 }
 
-
-
 func (s *AuthService) recordFailedAttempt(sourceKey string) {
 	s.attemptMu.Lock()
 	defer s.attemptMu.Unlock()
@@ -241,8 +219,6 @@ func (s *AuthService) recordFailedAttempt(sourceKey string) {
 	attempt.Count++
 	s.attempts[sourceKey] = attempt
 }
-
-
 
 func (s *AuthService) resetFailedAttempt(sourceKey string) {
 	s.attemptMu.Lock()

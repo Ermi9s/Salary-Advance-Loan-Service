@@ -3,15 +3,15 @@ package http
 import (
 	"log"
 	"net/http"
-	"salaryAdvance/internal/entity"
-	"salaryAdvance/internal/services"
+
 	"github.com/gin-gonic/gin"
+
+	"salaryAdvance/internal/entity"
 )
 
 type AuthHandlers struct {
-	AuthService *services.AuthService
+	AuthService AuthHandlerService
 }
-
 
 func (h *AuthHandlers) Register(c *gin.Context) {
 	var authUser entity.AuthUser
@@ -34,7 +34,6 @@ func (h *AuthHandlers) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
 
-
 func (h *AuthHandlers) RegisterAdmin(c *gin.Context) {
 	var authUser entity.AuthUser
 	if err := c.ShouldBindJSON(&authUser); err != nil {
@@ -56,8 +55,6 @@ func (h *AuthHandlers) RegisterAdmin(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Admin registered successfully"})
 }
 
-
-
 func (h *AuthHandlers) Login(c *gin.Context) {
 	var authUser entity.AuthUser
 	if err := c.ShouldBindJSON(&authUser); err != nil {
@@ -76,8 +73,6 @@ func (h *AuthHandlers) Login(c *gin.Context) {
 	log.Printf("Login successful")
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
-
-
 
 func (h *AuthHandlers) Logout(c *gin.Context) {
 	rawToken, ok := c.Get("token")

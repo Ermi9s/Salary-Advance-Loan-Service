@@ -5,7 +5,6 @@ import (
 
 	"salaryAdvance/internal/entity"
 	handler "salaryAdvance/internal/interfaces/http"
-	"salaryAdvance/internal/services"
 )
 
 type Router struct {
@@ -13,7 +12,7 @@ type Router struct {
 }
 
 func NewRouter(
-	authService *services.AuthService,
+	authService handler.AuthMiddlewareService,
 	authHandler *handler.AuthHandlers,
 	validationHandler *handler.ValidationHandler,
 	ratingHandler *handler.CustomerRatingHandler,

@@ -2,13 +2,12 @@ package http
 
 import (
 	"net/http"
-	"salaryAdvance/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ValidationHandler struct {
-	ValidationService *services.ValidationService
+	ValidationService ValidationHandlerService
 }
 
 func (h *ValidationHandler) DataValidationHandler(c *gin.Context) {

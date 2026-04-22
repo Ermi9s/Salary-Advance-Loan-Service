@@ -7,10 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"salaryAdvance/internal/entity"
-	"salaryAdvance/internal/services"
 )
 
-func AuthRequired(authService *services.AuthService) gin.HandlerFunc {
+func AuthRequired(authService AuthMiddlewareService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		header := c.GetHeader("Authorization")
 		if !strings.HasPrefix(header, "Bearer ") {
