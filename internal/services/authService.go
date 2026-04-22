@@ -37,15 +37,62 @@ type AuthService struct {
 	denylist   map[string]time.Time
 }
 
+
+func NewAuthService(repo AuthRepository, cfg AuthServiceConfig) *AuthService {
+	if cfg.MaxLoginAttempts <= 0 {
+		cfg.MaxLoginAttempts = 5
+	}
+	if cfg.LoginWindowDuration <= 0 {
+		cfg.LoginWindowDuration = 15 * time.Minute
+	}
+	if cfg.AccessTokenTTL <= 0 {
+		cfg.AccessTokenTTL = time.Hour
+	}
+
+	return &AuthService{
+		UserRepo: repo,
+		Config:   cfg,
+		attempts: make(map[string]loginAttempt),
+		denylist: make(map[string]time.Time),
+	}
+}
+
+
 func (s *AuthService) Register(user entity.User) error {
 	user.Role = entity.Uploader
-	return s.createUser(user)
+	normalizedUsername := strings.TrimSpace(strings.ToLower(user.Username))
+	if normalizedUsername == "" {
+		return errors.New("username is required")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.Username = normalizedUsername
+	user.PasswordHash = string(hash)
+	return s.UserRepo.CreateUser(context.Background(), user)
 }
+
 
 func (s *AuthService) RegisterAdmin(user entity.User) error {
 	user.Role = entity.Admin
-	return s.createUser(user)
+	normalizedUsername := strings.TrimSpace(strings.ToLower(user.Username))
+	if normalizedUsername == "" {
+		return errors.New("username is required")
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user.Username = normalizedUsername
+	user.PasswordHash = string(hash)
+	return s.UserRepo.CreateUser(context.Background(), user)
 }
+
 
 func (s *AuthService) Login(username, password string, sourceKey string) (string, error) {
 	normalizedUsername := strings.TrimSpace(strings.ToLower(username))
@@ -72,6 +119,7 @@ func (s *AuthService) Login(username, password string, sourceKey string) (string
 	return s.generateToken(user)
 }
 
+
 func (s *AuthService) Logout(token string) error {
 	claims, err := s.ValidateToken(token)
 	if err != nil {
@@ -84,24 +132,6 @@ func (s *AuthService) Logout(token string) error {
 	return nil
 }
 
-func NewAuthService(repo AuthRepository, cfg AuthServiceConfig) *AuthService {
-	if cfg.MaxLoginAttempts <= 0 {
-		cfg.MaxLoginAttempts = 5
-	}
-	if cfg.LoginWindowDuration <= 0 {
-		cfg.LoginWindowDuration = 15 * time.Minute
-	}
-	if cfg.AccessTokenTTL <= 0 {
-		cfg.AccessTokenTTL = time.Hour
-	}
-
-	return &AuthService{
-		UserRepo: repo,
-		Config:   cfg,
-		attempts: make(map[string]loginAttempt),
-		denylist: make(map[string]time.Time),
-	}
-}
 
 func (s *AuthService) ValidateToken(tokenString string) (*jwt.RegisteredClaims, error) {
 	if tokenString == "" {
@@ -155,22 +185,6 @@ func (s *AuthService) ParseRole(tokenString string) (entity.UserRole, error) {
 	}
 
 	return entity.UserRole(rawRole), nil
-}
-
-func (s *AuthService) createUser(user entity.User) error {
-	normalizedUsername := strings.TrimSpace(strings.ToLower(user.Username))
-	if normalizedUsername == "" {
-		return errors.New("username is required")
-	}
-
-	hash, err := bcrypt.GenerateFromPassword([]byte(user.PasswordHash), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-
-	user.Username = normalizedUsername
-	user.PasswordHash = string(hash)
-	return s.UserRepo.CreateUser(context.Background(), user)
 }
 
 func (s *AuthService) generateToken(user entity.User) (string, error) {
